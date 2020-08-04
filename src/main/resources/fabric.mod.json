@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "id": "hoppersplus",
+  "version": "${version}",
+
+  "name": "Hoppers+",
+  "description": "This is an example description! Tell everyone what your mod is about!",
+  "authors": [
+    "BRForgers",
+    "armelin1"
+  ],
+  "contact": {
+    "homepage": "https://brforgers.com.br/",
+    "sources": "https://github.com/BRForgers/hoppersplus"
+  },
+
+  "icon": "assets/hoppersplus/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "br.com.brforgers.mods.hoppersplus.HoppersPlus"
+      }
+    ],
+    "client": [
+      {
+        "adapter": "kotlin",
+        "value": "br.com.brforgers.mods.hoppersplus.HoppersPlusClient"
+      }
+    ]
+  },
+  "mixins": [
+    "hoppersplus.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.8.7",
+    "fabric": "*",
+    "fabric-language-kotlin": "*",
+    "minecraft": "1.16.x"
+  },
+  "suggests": {
+    "flamingo": "*"
+  }
+}

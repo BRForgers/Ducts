@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "br.com.brforgers.mods.hoppersplus.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "client": [
+    "AnyMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
