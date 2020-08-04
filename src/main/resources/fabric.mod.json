@@ -1,38 +1,38 @@
 {
   "schemaVersion": 1,
-  "id": "hoppersplus",
+  "id": "ducts",
   "version": "${version}",
 
-  "name": "Hoppers+",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Ducts",
+  "description": "This mod add ducts.",
   "authors": [
     "BRForgers",
     "armelin1"
   ],
   "contact": {
     "homepage": "https://brforgers.com.br/",
-    "sources": "https://github.com/BRForgers/hoppersplus"
+    "sources": "https://github.com/BRForgers/ducts"
   },
 
-  "icon": "assets/hoppersplus/icon.png",
+  "icon": "assets/ducts/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
       {
         "adapter": "kotlin",
-        "value": "br.com.brforgers.mods.hoppersplus.HoppersPlus"
+        "value": "br.com.brforgers.mods.ducts.Ducts"
       }
     ],
     "client": [
       {
         "adapter": "kotlin",
-        "value": "br.com.brforgers.mods.hoppersplus.HoppersPlusClient"
+        "value": "br.com.brforgers.mods.ducts.DuctsClient"
       }
     ]
   },
   "mixins": [
-    "hoppersplus.mixins.json"
+    "ducts.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.8.7",
