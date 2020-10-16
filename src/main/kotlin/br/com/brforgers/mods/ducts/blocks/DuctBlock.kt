@@ -25,7 +25,7 @@ import net.minecraft.world.WorldAccess
 class DuctBlock(
         private val screenHandler: ((Int, PlayerInventory, ScreenHandlerContext) -> ScreenHandler)?
 
-        ) : BlockWithEntity(Settings.of(Material.METAL, MaterialColor.STONE).requiresTool().strength(3.0F, 4.8F).sounds(BlockSoundGroup.METAL).nonOpaque()) {
+) : BlockWithEntity(Settings.of(Material.METAL, MaterialColor.STONE).requiresTool().strength(3.0F, 4.8F).sounds(BlockSoundGroup.METAL).nonOpaque()) {
     private val shapeCache = hashMapOf<BlockState, VoxelShape>()
 
     init {
@@ -88,7 +88,25 @@ class DuctBlock(
     }
 
     override fun getStateForNeighborUpdate(state: BlockState, direction: Direction, neighborState: BlockState, world: WorldAccess, pos: BlockPos, neighborPos: BlockPos): BlockState? {
-        return state.with(Props.input[direction], canConnect(neighborState, direction)).with(Props.powered, world.world.isReceivingRedstonePower(pos))
+        return state.with(Props.input[direction], canConnect(neighborState, direction)).with(Props.powered, this.isReceivingRedstonePower(world, pos))
+    }
+
+    private fun isReceivingRedstonePower(world: WorldAccess, pos: BlockPos): Boolean {
+        val blockState: BlockState = world.getBlockState(pos)
+
+        return if (blockState.getWeakRedstonePower(world, pos.down(), Direction.DOWN) > 0) {
+            true
+        } else if (blockState.getWeakRedstonePower(world, pos.up(), Direction.UP) > 0) {
+            true
+        } else if (blockState.getWeakRedstonePower(world, pos.north(), Direction.NORTH) > 0) {
+            true
+        } else if (blockState.getWeakRedstonePower(world, pos.south(), Direction.SOUTH) > 0) {
+            true
+        } else if (blockState.getWeakRedstonePower(world, pos.west(), Direction.WEST) > 0) {
+            true
+        } else {
+            blockState.getWeakRedstonePower(world, pos.east(), Direction.EAST) > 0
+        }
     }
 
     private fun canConnect(other: BlockState, dirToOther: Direction): Boolean {
