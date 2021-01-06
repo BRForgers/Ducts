@@ -23,6 +23,23 @@ import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Tickable
 import java.util.function.Supplier
+import alexiil.mc.lib.attributes.SearchOptions
+
+import alexiil.mc.lib.attributes.item.ItemAttributes
+
+import alexiil.mc.lib.attributes.item.ItemInsertable
+import alexiil.mc.lib.attributes.item.impl.RejectingItemInsertable
+import net.minecraft.util.ActionResult
+
+import alexiil.mc.lib.attributes.item.ItemInvUtil
+
+import alexiil.mc.lib.attributes.item.compat.FixedInventoryVanillaWrapper
+
+import alexiil.mc.lib.attributes.item.ItemExtractable
+
+
+
+
 
 class DuctBlockEntity(
         private val inventory: Inventory = SimpleInventory(1))
@@ -55,16 +72,25 @@ class DuctBlockEntity(
         if (cachedState[DuctBlock.Props.powered]/*&& stack.count <= 1*/) return false
 
         val outputDir = cachedState[DuctBlock.Props.output]
-        val outputInv = HopperBlockEntity.getInventoryAt(world, pos.offset(outputDir)) ?: return false
+        val outputInv = HopperBlockEntity.getInventoryAt(world, pos.offset(outputDir))
 
-        val stackCopy = this.getStack(0).copy()
-        val ret = HopperBlockEntity.transfer(this, outputInv, this.removeStack(0, 1), outputDir.opposite)
-        if (ret.isEmpty) {
-            outputInv.markDirty()
-            return true
+        if(outputInv != null){
+            val stackCopy = this.getStack(0).copy()
+            val ret = HopperBlockEntity.transfer(this, outputInv, this.removeStack(0, 1), outputDir.opposite)
+            if (ret.isEmpty) {
+                outputInv.markDirty()
+                return true
+            }
+            this.setStack(0, stackCopy)
+        } else {
+            val insertable = ItemAttributes.INSERTABLE[world, pos.offset(outputDir), SearchOptions.inDirection(outputDir)]
+            if (insertable == RejectingItemInsertable.NULL) {
+                return false
+            }
+            val extractable = FixedInventoryVanillaWrapper(this).extractable
+
+            return ItemInvUtil.move(extractable, insertable, 1) > 0
         }
-
-        this.setStack(0, stackCopy)
         return false
     }
 
