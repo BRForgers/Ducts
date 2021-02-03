@@ -47,6 +47,7 @@ class DuctBlockEntity(
         ExtendedScreenHandlerFactory,
         Tickable {
 
+    private var maxCooldown = 8
     var transferCooldown: Int = -1
 
     var customName: Text? = null
@@ -78,6 +79,9 @@ class DuctBlockEntity(
             val stackCopy = this.getStack(0).copy()
             val ret = HopperBlockEntity.transfer(this, outputInv, this.removeStack(0, 1), outputDir.opposite)
             if (ret.isEmpty) {
+                if (outputInv is DuctBlockEntity) {
+                    (outputInv as DuctBlockEntity).transferCooldown = maxCooldown
+                }
                 outputInv.markDirty()
                 return true
             }
@@ -105,7 +109,7 @@ class DuctBlockEntity(
         transferCooldown = 0
 
         if (attemptInsert()) {
-            transferCooldown = 8
+            transferCooldown = maxCooldown
             markDirty()
         }
     }
