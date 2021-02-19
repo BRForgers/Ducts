@@ -22,24 +22,11 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.Tickable
-import java.util.function.Supplier
 import alexiil.mc.lib.attributes.SearchOptions
-
 import alexiil.mc.lib.attributes.item.ItemAttributes
-
-import alexiil.mc.lib.attributes.item.ItemInsertable
 import alexiil.mc.lib.attributes.item.impl.RejectingItemInsertable
-import net.minecraft.util.ActionResult
-
 import alexiil.mc.lib.attributes.item.ItemInvUtil
-
 import alexiil.mc.lib.attributes.item.compat.FixedInventoryVanillaWrapper
-
-import alexiil.mc.lib.attributes.item.ItemExtractable
-
-
-
-
 
 class DuctBlockEntity(
         private val inventory: Inventory = SimpleInventory(1))
@@ -129,6 +116,6 @@ class DuctBlockEntity(
     }
 
     companion object {
-        val type = BlockEntityType.Builder.create(Supplier { DuctBlockEntity() }, Ducts.DUCT_BLOCK).build(null)!!
+        val type = BlockEntityType.Builder.create({ DuctBlockEntity() }, Ducts.DUCT_BLOCK).build(null)!!
     }
 }

@@ -88,25 +88,7 @@ class DuctBlock(
     }
 
     override fun getStateForNeighborUpdate(state: BlockState, direction: Direction, neighborState: BlockState, world: WorldAccess, pos: BlockPos, neighborPos: BlockPos): BlockState? {
-        return state.with(Props.input[direction], canConnect(neighborState, direction)).with(Props.powered, this.isReceivingRedstonePower(world, pos))
-    }
-
-    private fun isReceivingRedstonePower(world: WorldAccess, pos: BlockPos): Boolean {
-        val blockState: BlockState = world.getBlockState(pos)
-
-        return if (blockState.getWeakRedstonePower(world, pos.down(), Direction.DOWN) > 0) {
-            true
-        } else if (blockState.getWeakRedstonePower(world, pos.up(), Direction.UP) > 0) {
-            true
-        } else if (blockState.getWeakRedstonePower(world, pos.north(), Direction.NORTH) > 0) {
-            true
-        } else if (blockState.getWeakRedstonePower(world, pos.south(), Direction.SOUTH) > 0) {
-            true
-        } else if (blockState.getWeakRedstonePower(world, pos.west(), Direction.WEST) > 0) {
-            true
-        } else {
-            blockState.getWeakRedstonePower(world, pos.east(), Direction.EAST) > 0
-        }
+        return state.with(Props.input[direction], canConnect(neighborState, direction)).with(Props.powered, (world as? World)!!.isReceivingRedstonePower(pos))
     }
 
     private fun canConnect(other: BlockState, dirToOther: Direction): Boolean {
