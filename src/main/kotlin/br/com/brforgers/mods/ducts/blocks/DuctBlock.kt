@@ -1,6 +1,8 @@
 package br.com.brforgers.mods.ducts.blocks
 
 import br.com.brforgers.mods.ducts.blockentities.DuctBlockEntity
+import net.fabricmc.fabric.api.`object`.builder.v1.block.FabricBlockSettings
+import net.fabricmc.fabric.api.tool.attribute.v1.FabricToolTags
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -30,7 +32,7 @@ import kotlin.reflect.jvm.javaMethod
 class DuctBlock(
         private val screenHandler: ((Int, PlayerInventory, ScreenHandlerContext) -> ScreenHandler)?
 
-) : BlockWithEntity(Settings.of(Material.METAL, Blocks.IRON_BLOCK.defaultMapColor).requiresTool().strength(3.0F, 4.8F).sounds(BlockSoundGroup.METAL).nonOpaque()) {
+) : BlockWithEntity(FabricBlockSettings.of(Material.METAL, MapColor.IRON_GRAY).breakByHand(true).breakByTool(FabricToolTags.PICKAXES).strength(1.0F, 6.0F).sounds(BlockSoundGroup.METAL).nonOpaque()) {
     private val shapeCache = hashMapOf<BlockState, VoxelShape>()
 
     init {
