@@ -1,7 +1,12 @@
 package br.com.brforgers.mods.ducts.blocks
 
 import br.com.brforgers.mods.ducts.blockentities.DuctBlockEntity
+import net.fabricmc.fabric.api.`object`.builder.v1.block.FabricBlockSettings
+import net.fabricmc.fabric.api.tool.attribute.v1.FabricToolTags
 import net.minecraft.block.*
+import net.minecraft.block.entity.BlockEntity
+import net.minecraft.block.entity.BlockEntityTicker
+import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -21,11 +26,13 @@ import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
+import kotlin.reflect.jvm.javaConstructor
+import kotlin.reflect.jvm.javaMethod
 
 class DuctBlock(
         private val screenHandler: ((Int, PlayerInventory, ScreenHandlerContext) -> ScreenHandler)?
 
-) : BlockWithEntity(Settings.of(Material.METAL, MaterialColor.STONE).requiresTool().strength(3.0F, 4.8F).sounds(BlockSoundGroup.METAL).nonOpaque()) {
+) : BlockWithEntity(FabricBlockSettings.of(Material.METAL, MapColor.IRON_GRAY).breakByHand(true).breakByTool(FabricToolTags.PICKAXES).strength(1.0F, 6.0F).sounds(BlockSoundGroup.METAL).nonOpaque()) {
     private val shapeCache = hashMapOf<BlockState, VoxelShape>()
 
     init {
@@ -42,6 +49,8 @@ class DuctBlock(
                 *Props.input.values.toTypedArray()
         )
     }
+
+    override fun createBlockEntity(pos: BlockPos?, state: BlockState?) = DuctBlockEntity(pos!!, state!!)
 
     override fun getOutlineShape(
             state: BlockState,
@@ -88,25 +97,7 @@ class DuctBlock(
     }
 
     override fun getStateForNeighborUpdate(state: BlockState, direction: Direction, neighborState: BlockState, world: WorldAccess, pos: BlockPos, neighborPos: BlockPos): BlockState? {
-        return state.with(Props.input[direction], canConnect(neighborState, direction)).with(Props.powered, this.isReceivingRedstonePower(world, pos))
-    }
-
-    private fun isReceivingRedstonePower(world: WorldAccess, pos: BlockPos): Boolean {
-        val blockState: BlockState = world.getBlockState(pos)
-
-        return if (blockState.getWeakRedstonePower(world, pos.down(), Direction.DOWN) > 0) {
-            true
-        } else if (blockState.getWeakRedstonePower(world, pos.up(), Direction.UP) > 0) {
-            true
-        } else if (blockState.getWeakRedstonePower(world, pos.north(), Direction.NORTH) > 0) {
-            true
-        } else if (blockState.getWeakRedstonePower(world, pos.south(), Direction.SOUTH) > 0) {
-            true
-        } else if (blockState.getWeakRedstonePower(world, pos.west(), Direction.WEST) > 0) {
-            true
-        } else {
-            blockState.getWeakRedstonePower(world, pos.east(), Direction.EAST) > 0
-        }
+        return state.with(Props.input[direction], canConnect(neighborState, direction)).with(Props.powered, (world as? World)!!.isReceivingRedstonePower(pos))
     }
 
     private fun canConnect(other: BlockState, dirToOther: Direction): Boolean {
@@ -120,8 +111,6 @@ class DuctBlock(
                 }
     }
 
-    override fun createBlockEntity(blockView: BlockView) =
-            DuctBlockEntity()
 
     override fun onUse(
             state: BlockState,
@@ -220,5 +209,13 @@ class DuctBlock(
                 Direction.DOWN to createCuboidShape(5.0, 0.0, 5.0, 11.0, 4.0, 11.0)!!, //NEW
                 Direction.UP to createCuboidShape(5.0, 12.0, 5.0, 11.0, 16.0, 11.0)!!
         )
+    }
+
+    override fun <T : BlockEntity?> getTicker(
+        world: World?,
+        state: BlockState?,
+        type: BlockEntityType<T>?
+    ): BlockEntityTicker<T>? {
+        return checkType(type, DuctBlockEntity.type, DuctBlockEntity.instance::tick)
     }
 }
