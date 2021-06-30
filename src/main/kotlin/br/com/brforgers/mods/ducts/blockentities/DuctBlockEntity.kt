@@ -96,6 +96,8 @@ class DuctBlockEntity(
 
         if (blockEntity.transferCooldown > 0) return
 
+        blockEntity.transferCooldown = 0
+
         if (attemptInsert(world, pos, state, blockEntity)) {
             blockEntity.transferCooldown = maxCooldown
             blockEntity.markDirty()
