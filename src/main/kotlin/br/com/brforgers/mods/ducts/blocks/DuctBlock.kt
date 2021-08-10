@@ -7,6 +7,7 @@ import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.block.entity.HopperBlockEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -26,8 +27,6 @@ import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
-import kotlin.reflect.jvm.javaConstructor
-import kotlin.reflect.jvm.javaMethod
 
 class DuctBlock(
         private val screenHandler: ((Int, PlayerInventory, ScreenHandlerContext) -> ScreenHandler)?
@@ -216,6 +215,6 @@ class DuctBlock(
         state: BlockState?,
         type: BlockEntityType<T>?
     ): BlockEntityTicker<T>? {
-        return checkType(type, DuctBlockEntity.type, DuctBlockEntity.instance::tick)
+        return if (world!!.isClient) null else checkType(type, DuctBlockEntity.type, DuctBlockEntity.instance::tick)
     }
 }

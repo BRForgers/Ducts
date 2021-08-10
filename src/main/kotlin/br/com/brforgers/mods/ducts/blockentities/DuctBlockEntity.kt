@@ -58,8 +58,6 @@ class DuctBlockEntity(
     }
 
     private fun attemptInsert(world: World?, pos: BlockPos?, state: BlockState?, blockEntity: DuctBlockEntity?): Boolean {
-        val world = world ?: return false
-
         val stack = blockEntity!!.getStack(0)
         if (stack!!.isEmpty) return false
 
@@ -92,6 +90,9 @@ class DuctBlockEntity(
     }
 
     fun tick(world: World?, pos: BlockPos?, state: BlockState?, blockEntity: DuctBlockEntity?) {
+        val world = world ?: return
+        if(world.isClient) return
+
         blockEntity!!.transferCooldown--
 
         if (blockEntity.transferCooldown > 0) return
