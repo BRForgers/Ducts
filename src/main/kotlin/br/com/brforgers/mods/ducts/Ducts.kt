@@ -5,7 +5,6 @@ import br.com.brforgers.mods.ducts.blocks.DuctBlock
 import br.com.brforgers.mods.ducts.config.DuctsConfig
 import br.com.brforgers.mods.ducts.screens.DuctGuiDescription
 import me.shedaniel.autoconfig.AutoConfig
-import me.shedaniel.autoconfig.ConfigHolder
 import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry
@@ -25,8 +24,6 @@ import org.apache.logging.log4j.Logger
 object Ducts : ModInitializer {
     const val MOD_ID = "ducts"
     var logger: Logger = LogManager.getLogger("Ducts")
-
-    lateinit var configHolder : ConfigHolder<DuctsConfig>
 
     val DUCT: Identifier = Identifier(MOD_ID, "duct")
 
