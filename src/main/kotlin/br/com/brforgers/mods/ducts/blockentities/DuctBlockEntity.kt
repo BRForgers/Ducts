@@ -39,7 +39,7 @@ class DuctBlockEntity(
         instance = this
     }
 
-    private var maxCooldown = 8
+    private var maxCooldown = Ducts.config()?.maxCooldown ?: 8
     var transferCooldown: Int = -1
 
     var customName: Text? = null
@@ -61,17 +61,17 @@ class DuctBlockEntity(
         val stack = blockEntity!!.getStack(0)
         if (stack!!.isEmpty) return false
 
-        if (blockEntity.cachedState[DuctBlock.Props.powered]/*&& stack.count <= 1*/) return false
+        if (Ducts.config()?.redstoneLocksDucts == true && blockEntity.cachedState[DuctBlock.Props.powered]) return false
 
         val outputDir = blockEntity.cachedState[DuctBlock.Props.output]
         val outputInv = HopperBlockEntity.getInventoryAt(world, pos?.offset(outputDir))
 
-        if(outputInv != null){
+        if(outputInv != null) {
             val stackCopy = blockEntity.getStack(0).copy()
             val ret = HopperBlockEntity.transfer(blockEntity, outputInv, blockEntity.removeStack(0, 1), outputDir.opposite)
             if (ret.isEmpty) {
-                if (outputInv is DuctBlockEntity) {
-                    (outputInv as DuctBlockEntity).transferCooldown = maxCooldown
+                if (Ducts.config()?.targetCooldownEnabled == true && outputInv is DuctBlockEntity) {
+                    outputInv.setCooldown(maxCooldown)
                 }
                 outputInv.markDirty()
                 return true
@@ -95,13 +95,13 @@ class DuctBlockEntity(
 
         blockEntity!!.transferCooldown--
 
-        if (blockEntity.transferCooldown > 0) return
-
-        blockEntity.transferCooldown = 0
+        if (blockEntity.needsCooldown()) return
 
         if (attemptInsert(world, pos, state, blockEntity)) {
-            blockEntity.transferCooldown = maxCooldown
+            blockEntity.setCooldown(maxCooldown)
             blockEntity.markDirty()
+        } else {
+            blockEntity.setCooldown(0)
         }
     }
 
@@ -118,10 +118,18 @@ class DuctBlockEntity(
     override fun readNbt(tag: NbtCompound) {
         super.readNbt(tag)
         inventory.readNbt(tag)
-        transferCooldown = tag.getInt("TransferCooldown")
+        setCooldown(tag.getInt("TransferCooldown"))
         if (tag.contains("CustomName", 8)) {
             customName = Text.Serializer.fromJson(tag.getString("CustomName"))
         }
+    }
+
+    private fun needsCooldown(): Boolean {
+        return transferCooldown > 0
+    }
+
+    private fun setCooldown(cooldown: Int) {
+        transferCooldown = cooldown
     }
 
     override fun markDirty() {

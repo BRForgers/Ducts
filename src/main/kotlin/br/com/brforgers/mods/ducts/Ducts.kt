@@ -2,7 +2,10 @@ package br.com.brforgers.mods.ducts
 
 import br.com.brforgers.mods.ducts.blockentities.DuctBlockEntity
 import br.com.brforgers.mods.ducts.blocks.DuctBlock
+import br.com.brforgers.mods.ducts.config.DuctsConfig
 import br.com.brforgers.mods.ducts.screens.DuctGuiDescription
+import me.shedaniel.autoconfig.AutoConfig
+import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry
 import net.minecraft.block.Block
@@ -38,12 +41,15 @@ object Ducts : ModInitializer {
 
     override fun onInitialize(){
         logger.info("Ducts!")
+        AutoConfig.register(DuctsConfig::class.java, ::Toml4jConfigSerializer)
         Registry.register(Registry.BLOCK, DUCT, DUCT_BLOCK)
         Registry.register(Registry.ITEM, DUCT, BlockItem(DUCT_BLOCK, Item.Settings().group(ItemGroup.REDSTONE)))
         Registry.register(Registry.BLOCK_ENTITY_TYPE, DUCT, DuctBlockEntity.type)
 
     }
 
-
+    fun config(): DuctsConfig? {
+        return AutoConfig.getConfigHolder(DuctsConfig::class.java).config
+    }
 
 }
