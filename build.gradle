@@ -25,6 +25,16 @@ repositories {
         name = "BuildCraft"
         url = "https://mod-buildcraft.com/maven"
     }
+
+    maven {
+        name = "ClothConfig"
+        url = "https://maven.shedaniel.me/"
+    }
+
+    maven {
+        name = "ModMenu"
+        url = "https://maven.terraformersmc.com/releases/"
+    }
 }
 
 dependencies {
@@ -43,6 +53,10 @@ dependencies {
     //implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
+
+    modApi("me.shedaniel.cloth:cloth-config-fabric:${project.clothConfigVersion}") {
+        exclude(group: "net.fabricmc.fabric-api")
+    }
 }
 
 processResources {
