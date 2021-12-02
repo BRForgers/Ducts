@@ -1,11 +1,11 @@
 plugins {
     id 'fabric-loom'
     id 'maven-publish'
-    id "org.jetbrains.kotlin.jvm" version '1.5.10'
+    id "org.jetbrains.kotlin.jvm" version '1.6.0'
 }
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -78,7 +78,7 @@ tasks.withType(JavaCompile) {
     it.options.encoding = "UTF-8"
 
     // Minecraft 1.17 (21w19a) upwards uses Java 16.
-    it.options.release = 16
+    it.options.release = 17
 }
 
 // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
@@ -110,4 +110,4 @@ publishing {
     }
 }
 
-compileKotlin.kotlinOptions.jvmTarget = "16"
+compileKotlin.kotlinOptions.jvmTarget = "17"

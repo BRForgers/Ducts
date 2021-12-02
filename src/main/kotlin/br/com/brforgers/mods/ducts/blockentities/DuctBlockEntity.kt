@@ -13,9 +13,8 @@ import br.com.brforgers.mods.ducts.writeNbt
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.HopperBlockEntity
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.block.entity.LockableContainerBlockEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
@@ -32,47 +31,40 @@ import net.minecraft.world.World
 
 class DuctBlockEntity(
     pos : BlockPos, state: BlockState,private val inventory: Inventory = SimpleInventory(1))
-    : BlockEntity(type,pos,state), Inventory by inventory,
+    : LockableContainerBlockEntity(type,pos,state), Inventory by inventory,
         ExtendedScreenHandlerFactory {
 
     init {
         instance = this
     }
 
-    private var maxCooldown = Ducts.config()?.maxCooldown ?: 8
     var transferCooldown: Int = -1
 
-    var customName: Text? = null
-
-    override fun getDisplayName(): Text {
-        return customName ?: TranslatableText("block.ducts.duct")
+    override fun getContainerName(): Text {
+        return TranslatableText("block.ducts.duct")
     }
 
+    override fun createScreenHandler(syncId: Int, playerInventory: PlayerInventory): ScreenHandler {
+        return DuctGuiDescription(syncId, playerInventory, ScreenHandlerContext.create(world, pos))
+    }
 
     override fun writeScreenOpeningData(p0: ServerPlayerEntity?, p1: PacketByteBuf?) {
         p1?.writeBlockPos(this.pos)
-    }
-
-    override fun createMenu(syncId: Int, inv: PlayerInventory, player: PlayerEntity): ScreenHandler? {
-        return DuctGuiDescription(syncId, inv, ScreenHandlerContext.create(world, pos))
     }
 
     private fun attemptInsert(world: World?, pos: BlockPos?, state: BlockState?, blockEntity: DuctBlockEntity?): Boolean {
         val stack = blockEntity!!.getStack(0)
         if (stack!!.isEmpty) return false
 
-        if (Ducts.config()?.redstoneLocksDucts == true && blockEntity.cachedState[DuctBlock.Props.powered]) return false
+        if (blockEntity.cachedState[DuctBlock.Props.powered]/*&& stack.count <= 1*/) return false
 
         val outputDir = blockEntity.cachedState[DuctBlock.Props.output]
         val outputInv = HopperBlockEntity.getInventoryAt(world, pos?.offset(outputDir))
 
-        if(outputInv != null) {
+        if(outputInv != null){
             val stackCopy = blockEntity.getStack(0).copy()
             val ret = HopperBlockEntity.transfer(blockEntity, outputInv, blockEntity.removeStack(0, 1), outputDir.opposite)
             if (ret.isEmpty) {
-                if (Ducts.config()?.targetCooldownEnabled == true && outputInv is DuctBlockEntity) {
-                    outputInv.setCooldown(maxCooldown)
-                }
                 outputInv.markDirty()
                 return true
             }
@@ -95,41 +87,26 @@ class DuctBlockEntity(
 
         blockEntity!!.transferCooldown--
 
-        if (blockEntity.needsCooldown()) return
+        if (blockEntity.transferCooldown > 0) return
+
+        blockEntity.transferCooldown = 0
 
         if (attemptInsert(world, pos, state, blockEntity)) {
-            blockEntity.setCooldown(maxCooldown)
+            blockEntity.transferCooldown = 8
             blockEntity.markDirty()
-        } else {
-            blockEntity.setCooldown(0)
         }
     }
 
-    override fun writeNbt(tag: NbtCompound): NbtCompound {
+    override fun writeNbt(tag: NbtCompound) {
         super.writeNbt(tag)
         inventory.writeNbt(tag)
         tag.putInt("TransferCooldown", transferCooldown)
-        if (customName != null) {
-            tag.putString("CustomName", Text.Serializer.toJson(customName))
-        }
-        return tag
     }
 
     override fun readNbt(tag: NbtCompound) {
         super.readNbt(tag)
         inventory.readNbt(tag)
-        setCooldown(tag.getInt("TransferCooldown"))
-        if (tag.contains("CustomName", 8)) {
-            customName = Text.Serializer.fromJson(tag.getString("CustomName"))
-        }
-    }
-
-    private fun needsCooldown(): Boolean {
-        return transferCooldown > 0
-    }
-
-    private fun setCooldown(cooldown: Int) {
-        transferCooldown = cooldown
+        transferCooldown = tag.getInt("TransferCooldown")
     }
 
     override fun markDirty() {
