@@ -13,9 +13,8 @@ import br.com.brforgers.mods.ducts.writeNbt
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.HopperBlockEntity
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.block.entity.LockableContainerBlockEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
@@ -32,7 +31,7 @@ import net.minecraft.world.World
 
 class DuctBlockEntity(
     pos : BlockPos, state: BlockState,private val inventory: Inventory = SimpleInventory(1))
-    : BlockEntity(type,pos,state), Inventory by inventory,
+    : LockableContainerBlockEntity(type,pos,state), Inventory by inventory,
         ExtendedScreenHandlerFactory {
 
     init {
@@ -41,19 +40,16 @@ class DuctBlockEntity(
 
     var transferCooldown: Int = -1
 
-    var customName: Text? = null
-
-    override fun getDisplayName(): Text {
-        return customName ?: TranslatableText("block.ducts.duct")
+    override fun getContainerName(): Text {
+        return TranslatableText("block.ducts.duct")
     }
 
+    override fun createScreenHandler(syncId: Int, playerInventory: PlayerInventory): ScreenHandler {
+        return DuctGuiDescription(syncId, playerInventory, ScreenHandlerContext.create(world, pos))
+    }
 
     override fun writeScreenOpeningData(p0: ServerPlayerEntity?, p1: PacketByteBuf?) {
         p1?.writeBlockPos(this.pos)
-    }
-
-    override fun createMenu(syncId: Int, inv: PlayerInventory, player: PlayerEntity): ScreenHandler? {
-        return DuctGuiDescription(syncId, inv, ScreenHandlerContext.create(world, pos))
     }
 
     private fun attemptInsert(world: World?, pos: BlockPos?, state: BlockState?, blockEntity: DuctBlockEntity?): Boolean {
@@ -101,23 +97,16 @@ class DuctBlockEntity(
         }
     }
 
-    override fun writeNbt(tag: NbtCompound): NbtCompound {
+    override fun writeNbt(tag: NbtCompound) {
         super.writeNbt(tag)
         inventory.writeNbt(tag)
         tag.putInt("TransferCooldown", transferCooldown)
-        if (customName != null) {
-            tag.putString("CustomName", Text.Serializer.toJson(customName))
-        }
-        return tag
     }
 
     override fun readNbt(tag: NbtCompound) {
         super.readNbt(tag)
         inventory.readNbt(tag)
         transferCooldown = tag.getInt("TransferCooldown")
-        if (tag.contains("CustomName", 8)) {
-            customName = Text.Serializer.fromJson(tag.getString("CustomName"))
-        }
     }
 
     override fun markDirty() {
