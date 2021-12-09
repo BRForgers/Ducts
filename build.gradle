@@ -16,7 +16,7 @@ apply plugin: 'kotlin'
 apply from: 'https://raw.githubusercontent.com/thedarkcolour/KotlinForForge/site/thedarkcolour/kotlinforforge/gradle/kff-3.0.0.gradle'
 
 group = 'br.com.brforgers.mods'
-version = '1.0.0'
+version = '1.0.1'
 
 java {
     archivesBaseName = 'ducts-forge'

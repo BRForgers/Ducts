@@ -11,7 +11,7 @@ loaderVersion = "[2.2,)" #mandatory This is typically bumped every Minecraft ver
 # Review your options at https://choosealicense.com/. All rights reserved is the default copyright stance, and is thus the default here.
 license = "DBaJ"
 # A URL to refer people to when problems occur with this mod
-#issueTrackerURL="http://my.issue.tracker/" #optional
+issueTrackerURL="https://github.com/BRForgers/Ducts/issues" #optional
 # A list of mods - how many allowed here is determined by the individual mod loader
 [[mods]] #mandatory
 # The modid of the mod
@@ -25,9 +25,9 @@ displayName = "Ducts" #mandatory
 # A URL to query for updates for this mod. See the JSON update specification <here>
 #updateJSONURL="http://myurl.me/" #optional
 # A URL for the "homepage" for this mod, displayed in the mod UI
-#displayURL="http://example.com/" #optional
+displayURL="https://www.curseforge.com/minecraft/mc-mods/ducts" #optional
 # A file name (in the root of the mod JAR) containing a logo for display
-#logoFile="ducts.png" #optional
+logoFile= "icon.png" #optional
 # A text field displayed in the mod UI
 #credits="Thanks for this example mod goes to Java" #optional
 # A text field displayed in the mod UI
