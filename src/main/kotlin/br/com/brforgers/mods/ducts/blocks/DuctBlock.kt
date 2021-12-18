@@ -1,34 +1,30 @@
 package br.com.brforgers.mods.ducts.blocks
 
 import br.com.brforgers.mods.ducts.blockentities.DuctBlockEntity
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
-import net.minecraft.server.level.ServerPlayer
+import net.minecraft.block.*
+import net.minecraft.block.material.Material
+import net.minecraft.block.material.MaterialColor
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.player.ServerPlayerEntity
+import net.minecraft.inventory.InventoryHelper
+import net.minecraft.inventory.container.Container
+import net.minecraft.item.BlockItemUseContext
+import net.minecraft.item.ItemStack
+import net.minecraft.state.StateContainer
+import net.minecraft.state.properties.BlockStateProperties
+import net.minecraft.util.*
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.BlockRayTraceResult
+import net.minecraft.util.math.shapes.ISelectionContext
+import net.minecraft.util.math.shapes.VoxelShape
+import net.minecraft.util.math.shapes.VoxelShapes
 import net.minecraft.world.*
-import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.player.Player
-import net.minecraft.world.inventory.AbstractContainerMenu
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.context.BlockPlaceContext
-import net.minecraft.world.level.BlockGetter
-import net.minecraft.world.level.Level
-import net.minecraft.world.level.LevelAccessor
-import net.minecraft.world.level.block.*
-import net.minecraft.world.level.block.entity.BlockEntity
-import net.minecraft.world.level.block.entity.BlockEntityTicker
-import net.minecraft.world.level.block.entity.BlockEntityType
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.block.state.StateDefinition
-import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.minecraft.world.level.material.Material
-import net.minecraft.world.level.material.MaterialColor
-import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.world.phys.shapes.VoxelShape
-import net.minecraftforge.network.NetworkHooks
+import net.minecraftforge.fml.network.NetworkHooks
 
 
-class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.COLOR_GRAY).strength(1.0F, 6.0F).sound(SoundType.METAL).noOcclusion()) {
+class DuctBlock :
+    ContainerBlock(Properties.of(Material.METAL, MaterialColor.COLOR_GRAY).strength(1.0F, 6.0F).sound(SoundType.METAL).noOcclusion()) {
     private val shapeCache = hashMapOf<BlockState, VoxelShape>()
 
     init {
@@ -38,7 +34,7 @@ class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.CO
                 .setValue(Props.powered, false))
     }
 
-    override fun createBlockStateDefinition(propContainerBuilder: StateDefinition.Builder<Block, BlockState>) {
+    override fun createBlockStateDefinition(propContainerBuilder: StateContainer.Builder<Block, BlockState>) {
         propContainerBuilder.add(
             Props.output,
             Props.powered,
@@ -46,13 +42,13 @@ class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.CO
         )
     }
 
-    override fun newBlockEntity(pos: BlockPos?, state: BlockState?) = DuctBlockEntity(pos!!, state!!)
+    override fun newBlockEntity(blockreader: IBlockReader) = DuctBlockEntity()
 
     override fun getShape(
         state: BlockState,
-        view: BlockGetter,
+        view: IBlockReader,
         blockPos: BlockPos,
-        verticalEntityPosition: CollisionContext
+        verticalEntityPosition: ISelectionContext
     ): VoxelShape {
         return shapeCache.computeIfAbsent(state) {
             val core = Shapes.coreCube
@@ -61,7 +57,7 @@ class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.CO
                 .filter { state.getValue(Props.input.getValue(it)) }
                 .map(Shapes.inputCubes::getValue)
                 .toTypedArray()
-            net.minecraft.world.phys.shapes.Shapes.or(core, output, *inputs)
+            VoxelShapes.or(core, output, *inputs)
         }
     }
 
@@ -79,7 +75,7 @@ class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.CO
         )
     }
 
-    override fun getStateForPlacement(context: BlockPlaceContext): BlockState {
+    override fun getStateForPlacement(context: BlockItemUseContext): BlockState {
         return Props.input.entries
             .map { (dir, prop) ->
                 prop to canConnect(
@@ -92,8 +88,8 @@ class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.CO
             .setValue(Props.powered, context.level.hasNeighborSignal(context.clickedPos))
     }
 
-    override fun updateShape(state: BlockState, direction: Direction, neighborState: BlockState, world: LevelAccessor, pos: BlockPos, neighborPos: BlockPos): BlockState? {
-        return state.setValue(Props.input.getValue(direction), canConnect(neighborState, direction)).setValue(Props.powered, (world as? Level)!!.hasNeighborSignal(pos))
+    override fun updateShape(state: BlockState, direction: Direction, neighborState: BlockState, world: IWorld, pos: BlockPos, neighborPos: BlockPos): BlockState? {
+        return state.setValue(Props.input.getValue(direction), canConnect(neighborState, direction)).setValue(Props.powered, (world as? World)!!.hasNeighborSignal(pos))
     }
 
     private fun canConnect(other: BlockState, dirToOther: Direction): Boolean {
@@ -110,27 +106,27 @@ class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.CO
 
     override fun use(
         state: BlockState,
-        world: Level,
+        world: World,
         pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        blockHitPos: BlockHitResult
-    ): InteractionResult {
+        player: PlayerEntity,
+        hand: Hand,
+        blockHitPos: BlockRayTraceResult
+    ): ActionResultType {
         if (player.getItemInHand(hand).item == this.asItem() && player.isShiftKeyDown)
-            return InteractionResult.PASS
+            return ActionResultType.PASS
 
         if (!world.isClientSide) {
             val entity = world.getBlockEntity(pos)
             if (entity is DuctBlockEntity) {
-                NetworkHooks.openGui(player as ServerPlayer, entity as DuctBlockEntity?, pos)
+                NetworkHooks.openGui(player as ServerPlayerEntity, entity as DuctBlockEntity?, pos)
             }
         }
 
-        return InteractionResult.SUCCESS
+        return ActionResultType.SUCCESS
     }
 
     override fun setPlacedBy(
-        world: Level,
+        world: World,
         pos: BlockPos,
         state: BlockState,
         placer: LivingEntity?,
@@ -146,7 +142,7 @@ class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.CO
 
     override fun onRemove(
         state1: BlockState,
-        world: Level,
+        world: World,
         pos: BlockPos,
         state2: BlockState,
         someBool: Boolean
@@ -154,7 +150,7 @@ class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.CO
         if (state1.block !== state2.block) {
             val entity = world.getBlockEntity(pos)
             if (entity is DuctBlockEntity) {
-                Containers.dropContents(world, pos, entity)
+                InventoryHelper.dropContents(world, pos, entity)
                 world.updateNeighbourForOutputSignal(pos, this)
             }
         }
@@ -166,12 +162,12 @@ class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.CO
         return true
     }
 
-    override fun getAnalogOutputSignal(state: BlockState, world: Level, pos: BlockPos): Int {
-        return AbstractContainerMenu.getRedstoneSignalFromBlockEntity(world.getBlockEntity(pos))
+    override fun getAnalogOutputSignal(state: BlockState, world: World, pos: BlockPos): Int {
+        return Container.getRedstoneSignalFromBlockEntity(world.getBlockEntity(pos))
     }
 
-    override fun getRenderShape(state: BlockState): RenderShape {
-        return RenderShape.MODEL
+    override fun getRenderShape(state: BlockState): BlockRenderType {
+        return BlockRenderType.MODEL
     }
 
     object Props {
@@ -205,13 +201,5 @@ class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.CO
             Direction.DOWN to box(5.0, 0.0, 5.0, 11.0, 4.0, 11.0), //NEW
             Direction.UP to box(5.0, 12.0, 5.0, 11.0, 16.0, 11.0)
         )
-    }
-
-    override fun <T : BlockEntity?> getTicker(
-        world: Level?,
-        state: BlockState?,
-        type: BlockEntityType<T>?
-    ): BlockEntityTicker<T>? {
-        return if (world!!.isClientSide) null else createTickerHelper(type, DuctBlockEntity.type, DuctBlockEntity.instance::tick)
     }
 }

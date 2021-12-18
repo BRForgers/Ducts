@@ -1,19 +1,19 @@
 package br.com.brforgers.mods.ducts
 
-import net.minecraft.core.NonNullList
-import net.minecraft.nbt.CompoundTag
-import net.minecraft.world.Container
-import net.minecraft.world.ContainerHelper
-import net.minecraft.world.item.ItemStack
+import net.minecraft.inventory.IInventory
+import net.minecraft.inventory.ItemStackHelper
+import net.minecraft.item.ItemStack
+import net.minecraft.nbt.CompoundNBT
+import net.minecraft.util.NonNullList
 
-fun Container.writeNbt(tag: CompoundTag): CompoundTag {
+fun IInventory.writeNbt(tag: CompoundNBT): CompoundNBT {
     val items = (0 until containerSize).map { i -> getItem(i) }.toTypedArray()
-    return ContainerHelper.saveAllItems(tag, NonNullList.of(ItemStack.EMPTY, *items))
+    return ItemStackHelper.saveAllItems(tag, NonNullList.of(ItemStack.EMPTY, *items))
 }
 
-fun Container.readNbt(tag: CompoundTag) {
+fun IInventory.readNbt(tag: CompoundNBT) {
     val savedContent = NonNullList.withSize(containerSize, ItemStack.EMPTY)
-    ContainerHelper.loadAllItems(tag, savedContent)
+    ItemStackHelper.loadAllItems(tag, savedContent)
     savedContent.forEachIndexed(this::setItem)
 }
 

@@ -2,17 +2,17 @@ package br.com.brforgers.mods.ducts.inventories
 
 import br.com.brforgers.mods.ducts.Ducts
 import br.com.brforgers.mods.ducts.blockentities.DuctBlockEntity
-import net.minecraft.core.BlockPos
-import net.minecraft.world.entity.player.Inventory
-import net.minecraft.world.entity.player.Player
-import net.minecraft.world.inventory.AbstractContainerMenu
-import net.minecraft.world.inventory.Slot
-import net.minecraft.world.item.ItemStack
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.inventory.container.Container
+import net.minecraft.inventory.container.Slot
+import net.minecraft.item.ItemStack
+import net.minecraft.util.math.BlockPos
 import javax.annotation.Nonnull
 
 
-class DuctInventory(syncId: Int, playerInventory: Inventory, inventory: DuctBlockEntity) :
-    AbstractContainerMenu(Ducts.DUCT_MENU, syncId) {
+class DuctInventory(syncId: Int, playerInventory: PlayerInventory, inventory: DuctBlockEntity) :
+    Container(Ducts.DUCT_MENU, syncId) {
     val duct: DuctBlockEntity
 
     init {
@@ -30,18 +30,18 @@ class DuctInventory(syncId: Int, playerInventory: Inventory, inventory: DuctBloc
         }
     }
 
-    constructor(id: Int, playerInventory: Inventory, pos: BlockPos?) : this(
+    constructor(id: Int, playerInventory: PlayerInventory, pos: BlockPos?) : this(
         id,
         playerInventory,
         playerInventory.player.level.getBlockEntity(pos!!) as DuctBlockEntity
     )
 
-    override fun stillValid(@Nonnull player: Player): Boolean {
+    override fun stillValid(@Nonnull player: PlayerEntity): Boolean {
         return duct.stillValid(player)
     }
 
     @Nonnull
-    override fun quickMoveStack(@Nonnull player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(@Nonnull player: PlayerEntity, index: Int): ItemStack {
         var itemstack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasItem()) {
@@ -63,7 +63,7 @@ class DuctInventory(syncId: Int, playerInventory: Inventory, inventory: DuctBloc
         return itemstack
     }
 
-    override fun removed(@Nonnull player: Player) {
+    override fun removed(@Nonnull player: PlayerEntity) {
         super.removed(player)
         duct.stopOpen(player)
     }

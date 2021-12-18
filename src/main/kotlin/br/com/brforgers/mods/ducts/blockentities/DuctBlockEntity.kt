@@ -5,25 +5,24 @@ import br.com.brforgers.mods.ducts.blocks.DuctBlock
 import br.com.brforgers.mods.ducts.inventories.DuctInventory
 import br.com.brforgers.mods.ducts.readNbt
 import br.com.brforgers.mods.ducts.writeNbt
-import net.minecraft.core.BlockPos
-import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.TranslatableComponent
-import net.minecraft.world.Container
-import net.minecraft.world.SimpleContainer
-import net.minecraft.world.entity.player.Inventory
-import net.minecraft.world.inventory.AbstractContainerMenu
-import net.minecraft.world.level.Level
-import net.minecraft.world.level.block.entity.BaseContainerBlockEntity
-import net.minecraft.world.level.block.entity.BlockEntityType
-import net.minecraft.world.level.block.entity.HopperBlockEntity
-import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.block.BlockState
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.inventory.IInventory
+import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.container.Container
+import net.minecraft.nbt.CompoundNBT
+import net.minecraft.tileentity.HopperTileEntity
+import net.minecraft.tileentity.ITickableTileEntity
+import net.minecraft.tileentity.LockableTileEntity
+import net.minecraft.tileentity.TileEntityType
+import net.minecraft.util.text.ITextComponent
+import net.minecraft.util.text.TranslationTextComponent
 
 
 class DuctBlockEntity(
-    pos : BlockPos, state: BlockState, private val inventory: Container = SimpleContainer(1)
+    private val inventory: IInventory = Inventory(1)
 )
-    : BaseContainerBlockEntity(type, pos, state), Container by inventory {
+    : LockableTileEntity(type), IInventory by inventory, ITickableTileEntity {
 
     init {
         instance = this
@@ -31,58 +30,59 @@ class DuctBlockEntity(
 
     var transferCooldown: Int = -1
 
-    override fun getDefaultName(): Component{
-        return TranslatableComponent("block.ducts.duct")
+    override fun getDefaultName(): ITextComponent {
+        return TranslationTextComponent("block.ducts.duct")
     }
 
-    override fun createMenu(syncId: Int, playerInventory: Inventory): AbstractContainerMenu {
+    override fun createMenu(syncId: Int, playerInventory: PlayerInventory): Container {
         return DuctInventory(syncId, playerInventory, this)
     }
 
-    private fun attemptInsert(world: Level?, pos: BlockPos?, state: BlockState?, blockEntity: DuctBlockEntity?): Boolean {
-        val stack = blockEntity!!.getItem(0)
+    private fun attemptInsert(): Boolean {
+        val stack = getItem(0)
         if (stack.isEmpty) return false
 
-        if (blockEntity.blockState.getValue(DuctBlock.Props.powered)/*&& stack.count <= 1*/) return false
+        if (blockState.getValue(DuctBlock.Props.powered)/*&& stack.count <= 1*/) return false
 
-        val outputDir = blockEntity.blockState.getValue(DuctBlock.Props.output)
-        val outputInv = HopperBlockEntity.getContainerAt(world!!, pos?.relative(outputDir)!!) ?: return false
+        val outputDir = blockState.getValue(DuctBlock.Props.output)
+        val outputInv = HopperTileEntity.getContainerAt(level!!, blockPos.relative(outputDir)) ?: return false
 
-        val stackCopy = blockEntity.getItem(0).copy()
-        val ret = HopperBlockEntity.addItem(blockEntity, outputInv, blockEntity.removeItem(0, 1), outputDir.opposite)
+        val stackCopy = getItem(0).copy()
+        val ret = HopperTileEntity.addItem(this, outputInv, removeItem(0, 1), outputDir.opposite)
         if (ret.isEmpty) {
             outputInv.setChanged()
             return true
         }
-        blockEntity.setItem(0, stackCopy)
+        setItem(0, stackCopy)
 
         return false
     }
 
-    fun tick(world: Level?, pos: BlockPos?, state: BlockState?, blockEntity: DuctBlockEntity?) {
-        val world = world ?: return
+    override fun tick() {
+        val world = level ?: return
         if(world.isClientSide) return
 
-        blockEntity!!.transferCooldown--
+        transferCooldown--
 
-        if (blockEntity.transferCooldown > 0) return
+        if (transferCooldown > 0) return
 
-        blockEntity.transferCooldown = 0
+        transferCooldown = 0
 
-        if (attemptInsert(world, pos, state, blockEntity)) {
-            blockEntity.transferCooldown = 8
-            blockEntity.setChanged()
+        if (attemptInsert()) {
+            transferCooldown = 8
+            setChanged()
         }
     }
 
-    override fun saveAdditional(tag: CompoundTag) {
-        super.saveAdditional(tag)
+    override fun save(tag: CompoundNBT): CompoundNBT {
+        super.save(tag)
         inventory.writeNbt(tag)
         tag.putInt("TransferCooldown", transferCooldown)
+        return tag
     }
 
-    override fun load(tag: CompoundTag) {
-        super.load(tag)
+    override fun load(state: BlockState, tag: CompoundNBT) {
+        super.load(state, tag)
         inventory.readNbt(tag)
         transferCooldown = tag.getInt("TransferCooldown")
     }
@@ -93,7 +93,7 @@ class DuctBlockEntity(
     }
 
     companion object {
-        val type: BlockEntityType<DuctBlockEntity> = BlockEntityType.Builder.of(::DuctBlockEntity, Ducts.DUCT_BLOCK).build(null)
+        val type: TileEntityType<DuctBlockEntity> = TileEntityType.Builder.of(::DuctBlockEntity, Ducts.DUCT_BLOCK).build(null)
         @JvmStatic lateinit var instance: DuctBlockEntity
     }
 
