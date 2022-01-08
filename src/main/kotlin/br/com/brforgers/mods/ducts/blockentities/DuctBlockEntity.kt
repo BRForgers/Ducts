@@ -1,7 +1,5 @@
 package br.com.brforgers.mods.ducts.blockentities
 
-import alexiil.mc.lib.attributes.item.ItemInvUtil
-import alexiil.mc.lib.attributes.item.compat.FixedInventoryVanillaWrapper
 import br.com.brforgers.mods.ducts.Ducts
 import br.com.brforgers.mods.ducts.blocks.DuctBlock
 import br.com.brforgers.mods.ducts.readNbt
