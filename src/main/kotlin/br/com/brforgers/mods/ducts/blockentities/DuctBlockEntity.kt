@@ -1,10 +1,7 @@
 package br.com.brforgers.mods.ducts.blockentities
 
-import alexiil.mc.lib.attributes.SearchOptions
-import alexiil.mc.lib.attributes.item.ItemAttributes
 import alexiil.mc.lib.attributes.item.ItemInvUtil
 import alexiil.mc.lib.attributes.item.compat.FixedInventoryVanillaWrapper
-import alexiil.mc.lib.attributes.item.impl.RejectingItemInsertable
 import br.com.brforgers.mods.ducts.Ducts
 import br.com.brforgers.mods.ducts.blocks.DuctBlock
 import br.com.brforgers.mods.ducts.readNbt
@@ -12,6 +9,10 @@ import br.com.brforgers.mods.ducts.screens.DuctGuiDescription
 import br.com.brforgers.mods.ducts.writeNbt
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.HopperBlockEntity
 import net.minecraft.block.entity.LockableContainerBlockEntity
@@ -70,13 +71,8 @@ class DuctBlockEntity(
             }
             blockEntity.setStack(0, stackCopy)
         } else {
-            val insertable = ItemAttributes.INSERTABLE[world, pos?.offset(outputDir), SearchOptions.inDirection(outputDir)]
-            if (insertable == RejectingItemInsertable.NULL) {
-                return false
-            }
-            val extractable = FixedInventoryVanillaWrapper(this).extractable
-
-            return ItemInvUtil.move(extractable, insertable, 1) > 0
+            val target = ItemStorage.SIDED.find(world, pos?.offset(outputDir),outputDir) ?: return false
+            return StorageUtil.move(InventoryStorage.of(blockEntity.inventory, outputDir), target, { iv: ItemVariant? -> true }, 1, null) > 0
         }
         return false
     }
