@@ -75,7 +75,7 @@ class DuctBlockEntity(
             }
         } else {
             val target = ItemStorage.SIDED.find(world, pos?.offset(outputDir),outputDir.opposite) ?: return false
-            targetWasEmpty = CooldownCoordinator.isItemStorageEmpty(target)
+            targetWasEmpty = CooldownCoordinator.isStorageEmpty(target)
             transferSucceeded = StorageUtil.move(InventoryStorage.of(blockEntity.inventory, outputDir), target, { iv: ItemVariant? -> true }, 1, null) > 0
         }
 
