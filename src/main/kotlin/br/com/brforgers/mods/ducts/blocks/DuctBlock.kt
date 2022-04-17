@@ -2,12 +2,10 @@ package br.com.brforgers.mods.ducts.blocks
 
 import br.com.brforgers.mods.ducts.blockentities.DuctBlockEntity
 import net.fabricmc.fabric.api.`object`.builder.v1.block.FabricBlockSettings
-import net.fabricmc.fabric.api.tool.attribute.v1.FabricToolTags
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.block.entity.HopperBlockEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -31,7 +29,7 @@ import net.minecraft.world.WorldAccess
 class DuctBlock(
         private val screenHandler: ((Int, PlayerInventory, ScreenHandlerContext) -> ScreenHandler)?
 
-) : BlockWithEntity(FabricBlockSettings.of(Material.METAL, MapColor.IRON_GRAY).breakByHand(true).breakByTool(FabricToolTags.PICKAXES).strength(1.0F, 6.0F).sounds(BlockSoundGroup.METAL).nonOpaque()) {
+) : BlockWithEntity(FabricBlockSettings.of(Material.METAL, MapColor.IRON_GRAY).strength(1.0F, 6.0F).sounds(BlockSoundGroup.METAL).nonOpaque()) {
     private val shapeCache = hashMapOf<BlockState, VoxelShape>()
 
     init {
