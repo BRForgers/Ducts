@@ -31,7 +31,9 @@ object  Ducts {
 
     val LOGGER: Logger = LogManager.getLogger(ID)
 
-    val DUCT_BLOCK: Block = DuctBlock()
+    val BLOCK_REGISTRY = DeferredRegister.create(ForgeRegistries.BLOCKS, ID)
+
+    val DUCT_BLOCK by BLOCK_REGISTRY.registerObject("duct") { DuctBlock() }
 
     var DUCT_MENU: MenuType<DuctInventory> = IForgeMenuType.create { id: Int, inv: Inventory?, data: FriendlyByteBuf ->
         DuctInventory(id, inv!!, data.readBlockPos())
@@ -40,8 +42,6 @@ object  Ducts {
     init {
         LOGGER.log(Level.INFO, "Ducts!")
 
-        val BLOCK_REGISTRY = DeferredRegister.create(ForgeRegistries.BLOCKS, ID)
-        BLOCK_REGISTRY.registerObject("duct") { DUCT_BLOCK }
         BLOCK_REGISTRY.register(MOD_BUS)
 
         val ITEM_REGISTRY = DeferredRegister.create(ForgeRegistries.ITEMS, ID)
