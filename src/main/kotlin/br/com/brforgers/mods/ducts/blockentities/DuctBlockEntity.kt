@@ -8,7 +8,6 @@ import br.com.brforgers.mods.ducts.writeNbt
 import net.minecraft.core.BlockPos
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.TranslatableComponent
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.entity.player.Inventory
@@ -32,7 +31,7 @@ class DuctBlockEntity(
     var transferCooldown: Int = -1
 
     override fun getDefaultName(): Component{
-        return TranslatableComponent("block.ducts.duct")
+        return Component.translatable("block.ducts.duct")
     }
 
     override fun createMenu(syncId: Int, playerInventory: Inventory): AbstractContainerMenu {
