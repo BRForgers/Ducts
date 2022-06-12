@@ -23,7 +23,6 @@ import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableText
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 
@@ -40,7 +39,7 @@ class DuctBlockEntity(
     var transferCooldown: Int = -1
 
     override fun getContainerName(): Text {
-        return TranslatableText("block.ducts.duct")
+        return Text.translatable("block.ducts.duct")
     }
 
     override fun createScreenHandler(syncId: Int, playerInventory: PlayerInventory): ScreenHandler {
