@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.transfer.v1.item.InventoryStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil
+import net.gnomecraft.cooldowncoordinator.*
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.HopperBlockEntity
 import net.minecraft.block.entity.LockableContainerBlockEntity
@@ -30,12 +31,13 @@ import net.minecraft.world.World
 class DuctBlockEntity(
     pos : BlockPos, state: BlockState,private val inventory: Inventory = SimpleInventory(1))
     : LockableContainerBlockEntity(type,pos,state), Inventory by inventory,
-        ExtendedScreenHandlerFactory {
+        ExtendedScreenHandlerFactory, CoordinatedCooldown {
 
     init {
         instance = this
     }
 
+    private var lastTickTime: Long = Long.MAX_VALUE
     var transferCooldown: Int = -1
 
     override fun getContainerName(): Text {
@@ -59,18 +61,31 @@ class DuctBlockEntity(
         val outputDir = blockEntity.cachedState[DuctBlock.Props.output]
         val outputInv = HopperBlockEntity.getInventoryAt(world, pos?.offset(outputDir))
 
-        if(outputInv != null){
+        val targetEntity = world!!.getBlockEntity(pos!!.offset(outputDir))
+        val targetWasEmpty: Boolean
+        val transferSucceeded: Boolean
+
+        if (outputInv != null) {
             val stackCopy = blockEntity.getStack(0).copy()
-            val ret = HopperBlockEntity.transfer(blockEntity, outputInv, blockEntity.removeStack(0, 1), outputDir.opposite)
-            if (ret.isEmpty) {
-                outputInv.markDirty()
-                return true
+            targetWasEmpty = CooldownCoordinator.isInventoryEmpty(outputInv)
+            transferSucceeded = HopperBlockEntity.transfer(blockEntity, outputInv, blockEntity.removeStack(0, 1), outputDir.opposite).isEmpty
+            if (!transferSucceeded) {
+                blockEntity.setStack(0, stackCopy)
             }
-            blockEntity.setStack(0, stackCopy)
         } else {
-            val target = ItemStorage.SIDED.find(world, pos?.offset(outputDir),outputDir) ?: return false
-            return StorageUtil.move(InventoryStorage.of(blockEntity.inventory, outputDir), target, { iv: ItemVariant? -> true }, 1, null) > 0
+            val target = ItemStorage.SIDED.find(world, pos?.offset(outputDir),outputDir.opposite) ?: return false
+            targetWasEmpty = CooldownCoordinator.isStorageEmpty(target)
+            transferSucceeded = StorageUtil.move(InventoryStorage.of(blockEntity.inventory, outputDir), target, { iv: ItemVariant? -> true }, 1, null) > 0
         }
+
+        if (transferSucceeded) {
+            if (targetWasEmpty) {
+                CooldownCoordinator.notify(targetEntity)
+            }
+            targetEntity?.markDirty()
+            return true
+        }
+
         return false
     }
 
@@ -79,6 +94,7 @@ class DuctBlockEntity(
         if(world.isClient) return
 
         blockEntity!!.transferCooldown--
+        blockEntity.lastTickTime = world.time
 
         if (blockEntity.transferCooldown > 0) return
 
@@ -110,5 +126,15 @@ class DuctBlockEntity(
     companion object {
         val type = FabricBlockEntityTypeBuilder.create(::DuctBlockEntity, Ducts.DUCT_BLOCK).build(null)!!
         @JvmStatic lateinit var instance: DuctBlockEntity
+    }
+
+    override fun notifyCooldown() {
+        val worldTime = this.world?.time ?: Long.MAX_VALUE
+        if (this.lastTickTime >= worldTime) {
+            this.transferCooldown = 7
+        } else {
+            this.transferCooldown = 8
+        }
+        super.markDirty()
     }
 }
