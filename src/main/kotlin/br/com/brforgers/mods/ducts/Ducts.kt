@@ -9,11 +9,12 @@ import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.inventory.MenuType
 import net.minecraft.world.item.BlockItem
-import net.minecraft.world.item.CreativeModeTab
+import net.minecraft.world.item.CreativeModeTabs
 import net.minecraft.world.item.Item
 import net.minecraftforge.common.extensions.IForgeMenuType
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent
+import net.minecraftforge.event.CreativeModeTabEvent
 import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import org.apache.logging.log4j.Level
@@ -33,7 +34,7 @@ object  Ducts {
     val BLOCK_REGISTRY = DeferredRegister.create(ForgeRegistries.BLOCKS, ID)
 
     val DUCT_BLOCK by BLOCK_REGISTRY.registerObject("duct") { DuctBlock() }
-
+ 
     var DUCT_MENU: MenuType<DuctInventory> = IForgeMenuType.create { id: Int, inv: Inventory?, data: FriendlyByteBuf ->
         DuctInventory(id, inv!!, data.readBlockPos())
     }
@@ -44,20 +45,21 @@ object  Ducts {
         BLOCK_REGISTRY.register(MOD_BUS)
 
         val ITEM_REGISTRY = DeferredRegister.create(ForgeRegistries.ITEMS, ID)
-        ITEM_REGISTRY.registerObject("duct") { BlockItem(DUCT_BLOCK, Item.Properties().tab(CreativeModeTab.TAB_REDSTONE)) }
+        ITEM_REGISTRY.registerObject("duct") { BlockItem(DUCT_BLOCK, Item.Properties()) }
         ITEM_REGISTRY.register(MOD_BUS)
 
-        val BLOCK_ENTITY_REGISTRY = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, ID)
+        val BLOCK_ENTITY_REGISTRY = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, ID)
         BLOCK_ENTITY_REGISTRY.registerObject("duct") { DuctBlockEntity.type }
         BLOCK_ENTITY_REGISTRY.register(MOD_BUS)
 
-        val CONTAINER_REGISTRY = DeferredRegister.create(ForgeRegistries.CONTAINERS, ID)
+        val CONTAINER_REGISTRY = DeferredRegister.create(ForgeRegistries.MENU_TYPES, ID)
         CONTAINER_REGISTRY.registerObject("duct") { DUCT_MENU }
         CONTAINER_REGISTRY.register(MOD_BUS)
 
         runForDist(
             clientTarget = {
                 MOD_BUS.addListener(::onClientSetup)
+                MOD_BUS.addListener(::onCreativeModeTabBuildContents)
             },
             serverTarget = {
 
@@ -69,4 +71,10 @@ object  Ducts {
     private fun onClientSetup(event: FMLClientSetupEvent) {
         MenuScreens.register(DUCT_MENU, ::DuctScreen)
     }
+
+	public fun onCreativeModeTabBuildContents(event: CreativeModeTabEvent.BuildContents) {
+	  if (event.getTab() == CreativeModeTabs.REDSTONE_BLOCKS) {
+	    event.accept(DUCT_BLOCK);
+	  }
+	}
 }

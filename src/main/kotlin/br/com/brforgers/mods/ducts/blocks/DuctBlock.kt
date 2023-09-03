@@ -122,7 +122,7 @@ class DuctBlock : BaseEntityBlock(Properties.of(Material.METAL, MaterialColor.CO
         if (!world.isClientSide) {
             val entity = world.getBlockEntity(pos)
             if (entity is DuctBlockEntity) {
-                NetworkHooks.openGui(player as ServerPlayer, entity as DuctBlockEntity?, pos)
+                NetworkHooks.openScreen(player as ServerPlayer, entity as DuctBlockEntity?, pos)
             }
         }
 

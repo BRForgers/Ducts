@@ -33,7 +33,7 @@ class DuctScreen(screenContainer: DuctInventory, inv: Inventory, title: Componen
             RenderSystem.setShaderTexture(0, HOPPER_GUI_TEXTURE)
             val i = (width - imageWidth) / 2
             val j = (height - imageHeight) / 2
-            this.blit(matrixStack, i, j, 0, 0, imageWidth, imageHeight)
+            blit(matrixStack, i, j, 0, 0, imageWidth, imageHeight)
         }
     }
 
